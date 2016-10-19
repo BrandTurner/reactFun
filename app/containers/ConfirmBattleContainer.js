@@ -1,5 +1,6 @@
 var React         = require('react');
-var ConfirmBattle = require('../components/ConfirmBattle')
+var ConfirmBattle = require('../components/ConfirmBattle');
+var githubHelpers = require('../utils/githubHelpers');
 
 var ConfirmBattleContainer = React.createClass({
     // Performing Routing inside of the page on the buttons
@@ -9,7 +10,7 @@ var ConfirmBattleContainer = React.createClass({
     getInitialState: function() {
         console.log('getInitialState')
         return{
-            isLoading: false,
+            isLoading: true,
             playerInfo: []
         }
     },
@@ -20,17 +21,29 @@ var ConfirmBattleContainer = React.createClass({
         console.log('componentDidMount')
         var query = this.props.location.query;
         // fetch info from github, and update state
+        // getPlayersInfo is a promise, so you can call .then on that promise
+        githubHelpers.getPlayersInfo([query.playerOne, query.playerTwo])
+            .then(function (players) {
+                // after receiving promise, change the state
+                this.setState({
+                    isLoading: false,
+                    playerInfo: [players[0], players[1]]
+                })
+            }.bind(this))
     },
-    componentWillReceiveProps: function() {
-        console.log('componentWillReceiveProps')
-    },
-    componentWillUnmount: function() {
-        console.log('componentWillUnmount')
+    handleInitiateBattle: function() {
+        this.context.router.push({
+            pathname: '/results',
+            state: {
+                playerInfo: this.state.playerInfo
+            }
+        })
     },
     render: function() {
         return (
             <ConfirmBattle
                 isLoading   = {this.state.isLoading}
+                onInitiateBattle = {this.handleInitiateBattle}
                 playerInfo  = {this.state.playerInfo} />
         )
     }
